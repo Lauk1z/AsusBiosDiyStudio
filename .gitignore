@@ -1,0 +1,9 @@
+.buildtools/
+**/bin/
+**/obj/
+**/dist/
+.vs/
+*.user
+*.suo
+*.CAP
+*.cap

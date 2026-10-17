@@ -1,0 +1,206 @@
+<Window
+    x:Class="AsusBiosDiyStudio.WinUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AsusBiosDiyStudio.WinUI"
+    Title="ASUS BIOS DIY Studio · WinUI 3">
+    <Grid x:Name="Root" RowSpacing="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid x:Name="DragRegion" Padding="20,0,160,0">
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <FontIcon Glyph="&#xE950;" FontSize="16" />
+                <TextBlock Text="ASUS BIOS DIY Studio" Style="{StaticResource CaptionTextBlockStyle}" />
+                <TextBlock Text="WinUI 3" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" />
+            </StackPanel>
+        </Grid>
+        <NavigationView x:Name="Navigation" Grid.Row="1" PaneDisplayMode="Left"
+                        OpenPaneLength="220" IsBackButtonVisible="Collapsed" IsSettingsVisible="False"
+                        IsPaneToggleButtonVisible="False" SelectionChanged="NavigationChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="UI 图片资源" Tag="images" Icon="Pictures" IsSelected="True" />
+                <NavigationViewItem Content="启动 Logo" Tag="boot" Icon="View" />
+                <NavigationViewItem Content="主题颜色" Tag="colors"><NavigationViewItem.Icon><FontIcon Glyph="&#xE790;" /></NavigationViewItem.Icon></NavigationViewItem>
+                <NavigationViewItem Content="修改清单与构建" Tag="build" Icon="Save" />
+            </NavigationView.MenuItems>
+            <NavigationView.PaneFooter>
+                <StackPanel Margin="16,0,16,16" Spacing="16">
+                    <TextBlock Text="仅编辑视觉资源。测试修改版前请保留官方恢复 BIOS。" Style="{StaticResource SecondaryTextStyle}" FontSize="12" />
+                    <Button Content="运行日志" HorizontalAlignment="Stretch" Click="ShowLog" />
+                </StackPanel>
+            </NavigationView.PaneFooter>
+            <Grid Padding="24,8,24,16" RowSpacing="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel Spacing="4">
+                    <TextBlock x:Name="PageTitle" Text="UI 图片资源" Style="{StaticResource TitleTextBlockStyle}" />
+                    <TextBlock x:Name="PageDescription" Text="浏览资源索引，对比原图与替换效果。" Style="{StaticResource SecondaryTextStyle}" />
+                </StackPanel>
+                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid RowSpacing="12" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <TextBox x:Name="SourcePath" Header="源 BIOS CAP" PlaceholderText="选择要编辑的官方 BIOS 文件" AutomationProperties.Name="源 BIOS CAP" />
+                        <Button x:Name="SourceBrowseButton" Grid.Column="1" Content="浏览…" VerticalAlignment="Bottom" Click="BrowseSource" AutomationProperties.Name="浏览源 BIOS" />
+                        <TextBox x:Name="DonorPath" Grid.Row="1" Header="参考 BIOS（可选）" PlaceholderText="仅在需要复制其他 BIOS 的图片时填写" AutomationProperties.Name="参考 BIOS" />
+                        <Button x:Name="DonorBrowseButton" Grid.Row="1" Grid.Column="1" Content="浏览…" VerticalAlignment="Bottom" Click="BrowseDonor" AutomationProperties.Name="浏览参考 BIOS" />
+                        <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                                <CheckBox x:Name="LoadImages" Content="UI 图片包" IsChecked="True" MinWidth="0" />
+                                <CheckBox x:Name="LoadBoot" Content="启动 Logo" IsChecked="True" MinWidth="0" />
+                                <CheckBox x:Name="LoadColors" Content="主题颜色" IsChecked="True" MinWidth="0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="GuidButton" Content="资源 GUID…" Click="ShowGuidSettings" />
+                                <Button x:Name="LoadButton" Content="加载并扫描" Style="{StaticResource AccentButtonStyle}" Click="LoadProject" />
+                                <Button x:Name="CancelButton" Content="取消" IsEnabled="False" Click="CancelOperation" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+                <Grid Grid.Row="2">
+                    <Grid x:Name="ImagesPage" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="1.05*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid RowSpacing="12">
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                <TextBlock x:Name="ImageCount" Text="图片资源 · 尚未加载" Style="{StaticResource SubtitleTextBlockStyle}" />
+                                <GridView x:Name="ResourceGrid" Grid.Row="1" SelectionMode="Single" SelectionChanged="ImageSelectionChanged"
+                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                          ScrollViewer.VerticalScrollMode="Enabled" AutomationProperties.Name="BIOS 图片资源">
+                                    <GridView.ItemsPanel><ItemsPanelTemplate><ItemsWrapGrid Orientation="Horizontal" /></ItemsPanelTemplate></GridView.ItemsPanel>
+                                    <GridView.ItemTemplate>
+                                        <DataTemplate x:DataType="local:ImageResourceItem">
+                                            <StackPanel Width="128" Padding="6" Spacing="2">
+                                                <Image Source="{x:Bind Thumbnail}" Height="64" Stretch="Uniform" />
+                                                <TextBlock Text="{x:Bind Caption}" HorizontalAlignment="Center" />
+                                                <TextBlock Text="{x:Bind Dimensions}" HorizontalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Text="{x:Bind StateText, Mode=OneWay}" HorizontalAlignment="Center" FontSize="12" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridView.ItemTemplate>
+                                </GridView>
+                                <TextBlock x:Name="GalleryEmpty" Grid.Row="1" Text="加载 BIOS 后，这里会显示可编辑的图片资源。" Style="{StaticResource SecondaryTextStyle}" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="260" />
+                            </Grid>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                            <Grid RowSpacing="12">
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <TextBlock Text="图片预览" Style="{StaticResource SubtitleTextBlockStyle}" />
+                                <Grid Grid.Row="1" ColumnSpacing="8" MinHeight="70">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <Grid RowSpacing="8"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                        <TextBlock Text="源图片" Style="{StaticResource SecondaryTextStyle}" />
+                                        <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4"><Image x:Name="SourcePreview" Stretch="Uniform" /></Border>
+                                    </Grid>
+                                    <Grid Grid.Column="1" RowSpacing="8"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                        <TextBlock Text="参考图片" Style="{StaticResource SecondaryTextStyle}" />
+                                        <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4"><Image x:Name="DonorPreview" Stretch="Uniform" /></Border>
+                                    </Grid>
+                                    <Grid Grid.Column="2" RowSpacing="8"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                        <TextBlock Text="实际替换" Style="{StaticResource SecondaryTextStyle}" />
+                                        <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4"><Image x:Name="ReplacementPreview" Stretch="Uniform" /></Border>
+                                    </Grid>
+                                </Grid>
+                                <StackPanel Grid.Row="2" Spacing="12">
+                                    <TextBlock x:Name="ImageInfo" Text="选择左侧资源查看尺寸与替换效果。" Style="{StaticResource SecondaryTextStyle}" />
+                                    <ComboBox x:Name="FitMode" Header="尺寸处理" HorizontalAlignment="Stretch" SelectedIndex="0">
+                                        <ComboBoxItem Content="等比完整居中" /><ComboBoxItem Content="拉伸填满" /><ComboBoxItem Content="等比裁剪填满" /><ComboBoxItem Content="要求尺寸完全一致" />
+                                    </ComboBox>
+                                    <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <Button x:Name="CustomImageButton" Content="替换自己的图片…" HorizontalAlignment="Stretch" IsEnabled="False" Style="{StaticResource AccentButtonStyle}" Click="ReplaceCustomImage" />
+                                        <Button x:Name="DonorImageButton" Grid.Column="1" Content="使用参考图片" HorizontalAlignment="Stretch" IsEnabled="False" Click="ReplaceDonorImage" />
+                                    </Grid>
+                                    <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <Button x:Name="ExportImageButton" Content="导出原图…" HorizontalAlignment="Stretch" IsEnabled="False" Click="ExportImage" />
+                                        <Button x:Name="ResetImageButton" Grid.Column="1" Content="撤销此项" HorizontalAlignment="Stretch" IsEnabled="False" Click="ResetImage" />
+                                    </Grid>
+                                    <TextBlock Text="保持原资源索引和画布尺寸，避免改变 BIOS 布局。" Style="{StaticResource SecondaryTextStyle}" FontSize="12" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <Border x:Name="BootPage" Style="{StaticResource CardStyle}" Visibility="Collapsed">
+                        <Grid RowSpacing="16">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                            <TextBlock Text="启动画面对比" Style="{StaticResource SubtitleTextBlockStyle}" />
+                            <Grid Grid.Row="1" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Grid RowSpacing="8"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions><TextBlock Text="源启动 Logo" Style="{StaticResource SecondaryTextStyle}" /><Border Grid.Row="1" CornerRadius="4" Background="{ThemeResource LayerFillColorDefaultBrush}"><Image x:Name="BootSource" Stretch="Uniform" /></Border></Grid>
+                                <Grid Grid.Column="1" RowSpacing="8"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions><TextBlock Text="参考 BIOS Logo" Style="{StaticResource SecondaryTextStyle}" /><Border Grid.Row="1" CornerRadius="4" Background="{ThemeResource LayerFillColorDefaultBrush}"><Image x:Name="BootDonor" Stretch="Uniform" /></Border></Grid>
+                                <Grid Grid.Column="2" RowSpacing="8"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions><TextBlock Text="实际替换" Style="{StaticResource SecondaryTextStyle}" /><Border Grid.Row="1" CornerRadius="4" Background="{ThemeResource LayerFillColorDefaultBrush}"><Image x:Name="BootReplacement" Stretch="Uniform" /></Border></Grid>
+                            </Grid>
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="CustomBootButton" Content="选择自己的 Logo…" IsEnabled="False" Style="{StaticResource AccentButtonStyle}" Click="ReplaceCustomBoot" />
+                                <Button x:Name="DonorBootButton" Content="使用参考 BIOS Logo" IsEnabled="False" Click="ReplaceDonorBoot" />
+                                <Button x:Name="ResetBootButton" Content="撤销 Logo 修改" IsEnabled="False" Click="ResetBoot" />
+                            </StackPanel>
+                            <TextBlock Grid.Row="3" Text="自动转换为源 Logo 的像素尺寸与 BMP 格式，尺寸处理方式沿用图片资源页的选择。" Style="{StaticResource SecondaryTextStyle}" FontSize="12" />
+                        </Grid>
+                    </Border>
+                    <Grid x:Name="ColorsPage" Visibility="Collapsed" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="244" /></Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid RowSpacing="12"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                <TextBlock Text="AMITSE 结构化颜色" Style="{StaticResource SubtitleTextBlockStyle}" />
+                                <Grid Grid.Row="1" Padding="44,0,12,0" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="126" /><ColumnDefinition Width="50" /><ColumnDefinition Width="60" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="源颜色" Style="{StaticResource SecondaryTextStyle}" /><TextBlock Grid.Column="1" Text="Alpha" /><TextBlock Grid.Column="2" Text="记录数" /><TextBlock Grid.Column="3" Text="目标颜色" />
+                                </Grid>
+                                <ListView x:Name="ColorList" Grid.Row="2" SelectionMode="Multiple" SelectionChanged="ColorSelectionChanged" AutomationProperties.Name="主题颜色记录">
+                                    <ListView.ItemTemplate><DataTemplate x:DataType="local:ColorRecordItem">
+                                        <Grid ColumnSpacing="12" Padding="0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="126" /><ColumnDefinition Width="50" /><ColumnDefinition Width="60" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal" Spacing="8"><Border Width="24" Height="24" CornerRadius="4" Background="{x:Bind SourceBrush}" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" /><TextBlock Text="{x:Bind SourceText}" VerticalAlignment="Center" /></StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{x:Bind AlphaText}" VerticalAlignment="Center" /><TextBlock Grid.Column="2" Text="{x:Bind CountText}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="3" Text="{x:Bind ReplacementText, Mode=OneWay}" VerticalAlignment="Center" />
+                                            <ToolTipService.ToolTip><TextBlock Text="{x:Bind Properties}" MaxWidth="500" TextWrapping="Wrap" /></ToolTipService.ToolTip>
+                                        </Grid>
+                                    </DataTemplate></ListView.ItemTemplate>
+                                </ListView>
+                            </Grid>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                            <StackPanel Spacing="16">
+                                <TextBlock Text="编辑颜色" Style="{StaticResource SubtitleTextBlockStyle}" />
+                                <Button x:Name="SetColorButton" Content="设置选中颜色…" IsEnabled="False" HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}" Click="SetColor" />
+                                <Button x:Name="ResetColorButton" Content="撤销选中颜色" IsEnabled="False" HorizontalAlignment="Stretch" Click="ResetColor" />
+                                <TextBlock Text="可选择多条记录。仅修改对应的结构化颜色，保留各记录原有 Alpha 值。" Style="{StaticResource SecondaryTextStyle}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <Grid x:Name="BuildPage" Visibility="Collapsed" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource CardStyle}"><Grid RowSpacing="12"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                            <TextBlock x:Name="ChangesTitle" Text="待执行修改 · 0 项" Style="{StaticResource SubtitleTextBlockStyle}" />
+                            <ListView x:Name="ChangesList" Grid.Row="1" SelectionMode="None"><ListView.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" /></DataTemplate></ListView.ItemTemplate></ListView>
+                        </Grid></Border>
+                        <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="16">
+                                    <TextBlock Text="输出设置" Style="{StaticResource SubtitleTextBlockStyle}" />
+                                    <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <TextBox x:Name="OutputDirectory" Header="输出目录" PlaceholderText="选择新的输出文件夹" /><Button x:Name="OutputBrowseButton" Grid.Column="1" Content="浏览…" VerticalAlignment="Bottom" Click="BrowseOutput" />
+                                    </Grid>
+                                    <TextBox x:Name="OutputName" Header="输出 CAP 名称" Text="ASUS-BIOS-DIY.CAP" />
+                                    <TextBox x:Name="FlashbackName" Header="USB BIOS FlashBack 文件名" Text="A5660.CAP" />
+                                    <Button x:Name="BuildButton" Content="构建并反向验证" HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}" IsEnabled="False" Click="BuildBios" />
+                                    <InfoBar IsOpen="True" IsClosable="False" Severity="Warning" Title="文件验证不代表实机安全" Message="构建后反向提取校验修改模块。请保留官方恢复 BIOS，修改版仅建议通过 USB BIOS FlashBack 测试。" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+                <Grid Grid.Row="3" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="120" /></Grid.ColumnDefinitions>
+                    <TextBlock x:Name="StatusText" Text="就绪 · 选择 BIOS 文件并加载资源" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="就绪 · 选择 BIOS 文件并加载资源" />
+                    <ProgressBar x:Name="BusyProgress" Grid.Column="1" IsIndeterminate="True" Visibility="Collapsed" VerticalAlignment="Center" />
+                </Grid>
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Window>
