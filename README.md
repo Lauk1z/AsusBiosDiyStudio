@@ -2,9 +2,6 @@
 
 面向华硕 AMI Aptio BIOS 的通用视觉资源编辑器，不绑定 PRIME、ROG 或某一块具体主板。
 
-当前版本 **v2.0.0** 使用 Windows App SDK、XAML 和 .NET 10 从界面框架重建为原生 WinUI 3 应用，不是 WinForms 换皮。
-任务栏和 EXE 使用与标题栏一致的芯片图标，包含适配不同 DPI 的多种分辨率。
-
 ## 可以编辑
 
 - 浏览 BIOS UI 图片包中的全部 PNG 资源及索引；
@@ -15,15 +12,6 @@
 - 扫描 AMITSE 结构化主题色，选择具体颜色后进行 DIY；
 - 自定义 UI、Boot Logo、AMITSE、SetupData 的 GUID 与 Section Type；
 - 自定义 FlashBack 文件名。
-
-## 安全约束
-
-- 不提供 SetupData、AGESA、微码、内存训练或硬件初始化模块替换功能；
-- 颜色只修改 AMITSE `.data` 中具有 `owner/property` 结构的记录，不全文替换 RGB；
-- 所有图片资源保持原索引；
-- 构建后自动反向提取所有修改模块并进行 SHA256 校验；完整文本树报告不是成功条件；
-- SetupData 能够提取时必须与源 BIOS 保持一致；
-- CAP 文件大小及前 4096 字节必须与源 BIOS 一致。
 
 ## 使用步骤
 
